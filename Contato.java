@@ -4,10 +4,8 @@ import java.util.Vector;
 
 public class Contato {
     private String nome,telefone,email;
-    private Vector contato;
 
-    public Contato(){
-        contato = new Vector();        
+    public Contato(){   
     }
     
     public String getNome() {
