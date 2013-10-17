@@ -1,9 +1,9 @@
-package src;
+package teste;
 
 
 import javax.microedition.lcdui.*;
-import javax.microedition.midlet.MIDlet;
-import javax.microedition.midlet.MIDletStateChangeException;
+import javax.microedition.midlet.*;
+import java.util.*;
 
 
 /**
@@ -17,7 +17,10 @@ public class Agenda extends MIDlet implements CommandListener {
     private List l;
     private TextField nome,tel,email,pesqnome;
     private TextBox box;
-    private Contato cont;
+    private Contato cont = new Contato();
+    
+    private Vector vetor = new Vector();
+    private int contador=0;
     
     public Agenda(){
         d = Display.getDisplay(this);
@@ -26,7 +29,7 @@ public class Agenda extends MIDlet implements CommandListener {
         exc = new Command("Excluir", Command.SCREEN,1);
         voltar = new Command("Voltar",Command.SCREEN,2);
         sair = new Command("Sair",Command.EXIT,2);
-        box = new TextBox("Contato","",50,TextField.ANY);
+       
         l = new List("Agenda",List.IMPLICIT);
         
         //Form 1 - Adicionar Contato
@@ -62,10 +65,7 @@ public class Agenda extends MIDlet implements CommandListener {
         f2.addCommand(voltar);
         f2.setCommandListener(this);
         
-        //Tela Resultado da Busca
-        box.addCommand(voltar);
-        box.addCommand(exc);
-        box.setCommandListener(this);
+        
     }
 
     protected void destroyApp(boolean bln) {
@@ -94,6 +94,18 @@ public class Agenda extends MIDlet implements CommandListener {
         
         //Grava e volta para a tela inicial
         if(c == grav){
+            
+            cont.setNome(nome.getString());
+            cont.setTelefone(tel.getString());
+            cont.setEmail(email.getString());
+            l.insert(contador, cont.getNome(), null);
+            contador++;
+            vetor.addElement(cont);//adiciono ao vetor
+            
+            tel.setString("");
+            email.setString("");
+            nome.setString("");
+            
             d.setCurrent(l);
         }
         
@@ -107,12 +119,25 @@ public class Agenda extends MIDlet implements CommandListener {
             d.setCurrent(f2);
         }
         if(c == ok){
+            String texto = "Contato inexistente";
+            for(int i=0;i<vetor.size();i++){
+                Contato nome_vetor = (Contato) vetor.elementAt(i);
+                if(pesqnome.getString().toUpperCase().equals(nome_vetor.getNome().toUpperCase())){
+                    texto = nome_vetor.getNome()+"\n"+nome_vetor.getTelefone()+"\n"+nome_vetor.getEmail();
+                }
+            }
+            box = new TextBox("Contato",texto,50,TextField.ANY);
+            //Tela Resultado da Busca
+            box.addCommand(voltar);
+            box.addCommand(exc);
+            box.setCommandListener(this);
+            pesqnome.setString("");
             d.setCurrent(box);
         }
         
         //Exclui Contato
         if(c == exc){
-            
+            contador--;
         }
     }
     
