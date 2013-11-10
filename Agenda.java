@@ -1,16 +1,15 @@
 package teste;
 
-
 import javax.microedition.lcdui.*;
 import javax.microedition.midlet.*;
 import java.util.*;
+import javax.microedition.rms.RecordStore;
 
 
-/**
- *
- * @author Morvan
- */
 public class Agenda extends MIDlet implements CommandListener {
+    private RecordStore rs = null;
+    static final String AGENDA="db_1";
+    
     private Display d;
     private Command pesq,add,exc,grav,ok,voltar,sair;
     private Form f1,f2;
@@ -65,7 +64,7 @@ public class Agenda extends MIDlet implements CommandListener {
         f2.addCommand(voltar);
         f2.setCommandListener(this);
         
-        
+        openRecStore();//cria o registro
     }
 
     protected void destroyApp(boolean bln) {
@@ -100,8 +99,10 @@ public class Agenda extends MIDlet implements CommandListener {
             cont.setEmail(email.getString());
             l.insert(contador, cont.getNome(), null);
             contador++;
-            vetor.addElement(cont);//adiciono ao vetor
-            
+            //vetor.addElement(cont);//adiciono ao vetor
+            writeRecord(cont.getNome());
+            writeRecord(cont.getTelefone());
+            writeRecord(cont.getEmail());
             tel.setString("");
             email.setString("");
             nome.setString("");
@@ -120,12 +121,36 @@ public class Agenda extends MIDlet implements CommandListener {
         }
         if(c == ok){
             String texto = "Contato inexistente";
-            for(int i=0;i<vetor.size();i++){
+            /*for(int i=0;i<vetor.size();i++){
                 Contato nome_vetor = (Contato) vetor.elementAt(i);
                 if(pesqnome.getString().toUpperCase().equals(nome_vetor.getNome().toUpperCase())){
                     texto = nome_vetor.getNome()+"\n"+nome_vetor.getTelefone()+"\n"+nome_vetor.getEmail();
                 }
+            }*/
+            String nome_digitado = pesqnome.getString().toUpperCase();
+//--
+            try{
+                byte[] recData = new byte[5];
+                int len;
+                for(int i=1;i<rs.getNumRecords();i++){
+                    if(rs.getRecordSize(i)>recData.length)
+                        recData = new byte[rs.getRecordSize(i)];
+                    len = rs.getRecord(i, recData, 0);
+                    int len2 = rs.getRecord(i+1, recData, 0);
+                    int len3 = rs.getRecord(i+2, recData, 0);
+                    String nome_banco= new String(recData,0,len).toUpperCase();
+                    String tel_banco= new String(recData,0,len2).toUpperCase();
+                    String email_banco= new String(recData,0,len3).toUpperCase();
+                    if(nome_banco.equals(nome_digitado)){
+                        texto = "Nome: " +nome_banco+"\nTelefone: "+tel_banco+"\nEmail: "+email_banco;
+                    }
+                }
             }
+            catch(Exception e){
+                db(e.toString());
+            }
+            
+//--
             box = new TextBox("Contato",texto,50,TextField.ANY);
             //Tela Resultado da Busca
             box.addCommand(voltar);
@@ -140,7 +165,28 @@ public class Agenda extends MIDlet implements CommandListener {
             contador--;
         }
     }
+    //----------------------
+    private void openRecStore(){
+        try{
+            rs = RecordStore.openRecordStore(AGENDA, true);
+            // true é necessaria para criar caso o mesmo nao exista
+        }
+        catch(Exception e){
+            db(e.toString());
+        }
+    }
     
+    private void writeRecord(String r){
+        byte[] rec = r.getBytes();
+        try{
+            rs.addRecord(rec, 0, rec.length);
+        }
+        catch(Exception e){
+            db(e.toString());
+        }
+    }
     
-    
+    private void db(String st){
+        System.out.println("MSG:"+st);
+    }
 }
